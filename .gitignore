@@ -1,5 +1,8 @@
-# Create .gitignore file
-echo "# Compiled files
+cd C:\java-backend1
+
+# Create correct .gitignore file
+@'
+# Compiled files
 target/
 *.class
 
@@ -19,11 +22,16 @@ Thumbs.db
 *.jar
 *.war
 *.ear
+!*.jar
 
-# Maven
-.mvn/
-mvnw
-mvnw.cmd
+# Maven wrapper files - COMMENT THESE OUT if you want to include them
+# .mvn/
+# mvnw
+# mvnw.cmd
 
 # Test files
-src/test/" > .gitignore
+src/test/
+'@ | Out-File -FilePath .gitignore -Encoding UTF8
+
+# Verify
+cat .gitignore
