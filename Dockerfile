@@ -2,18 +2,27 @@
 
 WORKDIR /app
 
+# copy maven wrapper files
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
+# give permission
 RUN chmod +x mvnw
+
+# download dependencies first (faster build caching)
 RUN ./mvnw dependency:go-offline -B
 
+# copy source
 COPY src src
+
+# build jar
 RUN ./mvnw clean package -DskipTests
 
-RUN mkdir -p /app/temp
+# Render uses dynamic port → important
+ENV PORT=8080
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "target/backend-0.0.1-SNAPSHOT.jar"]
+# start spring boot
+CMD ["java","-Dserver.port=${PORT}","-jar","target/backend-0.0.1-SNAPSHOT.jar"]
