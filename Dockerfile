@@ -25,4 +25,4 @@ ENV PORT=8080
 EXPOSE 8080
 
 # start spring boot
-CMD ["java","-Dserver.port=${PORT}","-jar","target/backend-0.0.1-SNAPSHOT.jar"]
+CMD ["java","-Dserver.port=${PORT}","-jar","target/backend.jar"]
