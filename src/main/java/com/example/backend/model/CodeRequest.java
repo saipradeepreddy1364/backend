@@ -1,9 +1,8 @@
 package com.example.backend.model;
 
 public class CodeRequest {
-
-    private String code;  // the source code to compile/run
-    private String input; // optional input for the program
+    private String code;
+    private String input;
 
     public CodeRequest() {}
 

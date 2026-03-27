@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.model.CodeRequest;
+import com.example.backend.model.CodeResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
@@ -15,20 +16,20 @@ import java.util.concurrent.TimeUnit;
 public class CompilerController {
 
     @PostMapping("/run")
-    public String runCode(@RequestBody CodeRequest request) {
+    public CodeResponse runCode(@RequestBody CodeRequest request) {
         String code = request.getCode();
         String input = request.getInput();
 
         if (code == null || code.isBlank()) {
-            return "Error: No code provided.";
+            return new CodeResponse("Error: No code provided.", null, null, "Error");
         }
 
-        // Create a temporary folder
+        // Create temporary folder
         Path folder;
         try {
             folder = Files.createTempDirectory("compiler_" + UUID.randomUUID());
         } catch (IOException e) {
-            return "Error creating temporary folder: " + e.getMessage();
+            return new CodeResponse("Error creating temporary folder: " + e.getMessage(), null, null, "Error");
         }
 
         File javaFile = folder.resolve("Main.java").toFile();
@@ -37,7 +38,7 @@ public class CompilerController {
             writer.write(code);
         } catch (IOException e) {
             deleteFolder(folder.toFile());
-            return "Error writing code file: " + e.getMessage();
+            return new CodeResponse("Error writing code file: " + e.getMessage(), null, null, "Error");
         }
 
         try {
@@ -52,10 +53,10 @@ public class CompilerController {
 
             if (!compileOutput.isEmpty()) {
                 deleteFolder(folder.toFile());
-                return "Compilation Error:\n" + compileOutput;
+                return new CodeResponse("Compilation Error:\n" + compileOutput, null, null, "Compilation Error");
             }
 
-            // Run with optional input and 10-second timeout
+            // Run with optional input, timeout 10s
             Process run = new ProcessBuilder("java", "-cp", ".", "Main")
                     .directory(folder.toFile())
                     .redirectErrorStream(true)
@@ -74,21 +75,20 @@ public class CompilerController {
             if (!finished) {
                 run.destroyForcibly();
                 deleteFolder(folder.toFile());
-                return "Error: Execution timed out (10 second limit exceeded).";
+                return new CodeResponse("Error: Execution timed out (10 second limit exceeded).", null, null, "Timeout");
             }
 
             String output = readStream(run.getInputStream());
             deleteFolder(folder.toFile());
 
-            return output.isBlank() ? "(No output)" : output;
+            return new CodeResponse(output.isBlank() ? "No output" : output, null, null, "Success");
 
         } catch (Exception e) {
             deleteFolder(folder.toFile());
-            return "Error: " + e.getMessage();
+            return new CodeResponse("Error: " + e.getMessage(), null, null, "Error");
         }
     }
 
-    // Helper to read InputStream fully
     private String readStream(InputStream inputStream) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             StringBuilder output = new StringBuilder();
@@ -100,7 +100,6 @@ public class CompilerController {
         }
     }
 
-    // Recursive folder deletion
     private void deleteFolder(File folder) {
         if (folder.isDirectory()) {
             File[] files = folder.listFiles();

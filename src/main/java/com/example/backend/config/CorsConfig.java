@@ -13,10 +13,9 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-
-                registry.addMapping("/**")  // ✅ allow ALL endpoints
+                registry.addMapping("/**")
                         .allowedOrigins(
-                                "http://localhost:5173",   // ✅ local frontend
+                                "http://localhost:5173",
                                 "https://compiler-two-sigma.vercel.app"
                         )
                         .allowedMethods("*")

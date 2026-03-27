@@ -4,6 +4,7 @@ import com.example.backend.model.SavedCode;
 import com.example.backend.repository.SavedCodeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -17,7 +18,6 @@ public class SavedCodeController {
     @Autowired
     private SavedCodeRepository savedCodeRepository;
 
-    // POST /api/codes/save
     @PostMapping("/save")
     public ResponseEntity<Map<String, Object>> saveCode(@RequestBody SavedCode savedCode) {
         Map<String, Object> response = new HashMap<>();
@@ -36,16 +36,14 @@ public class SavedCodeController {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/codes/user/{userId}
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<SavedCode>> getCodesByUser(@PathVariable Long userId) {
+    public ResponseEntity<List<SavedCode>> getCodesByUser(@PathVariable @NonNull Long userId) {
         List<SavedCode> codes = savedCodeRepository.findByUserIdOrderBySavedAtDesc(userId);
         return ResponseEntity.ok(codes);
     }
 
-    // GET /api/codes/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getCodeById(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getCodeById(@PathVariable @NonNull Long id) {
         Map<String, Object> response = new HashMap<>();
         return savedCodeRepository.findById(id)
                 .map(code -> {
@@ -60,9 +58,8 @@ public class SavedCodeController {
                 });
     }
 
-    // DELETE /api/codes/{id}
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deleteCode(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> deleteCode(@PathVariable @NonNull Long id) {
         Map<String, Object> response = new HashMap<>();
 
         if (!savedCodeRepository.existsById(id)) {
