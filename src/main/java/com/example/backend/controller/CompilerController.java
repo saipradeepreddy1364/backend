@@ -3,7 +3,6 @@ package com.example.backend.controller;
 import com.example.backend.model.CodeRequest;
 import com.example.backend.model.CodeResponse;
 import org.springframework.web.bind.annotation.*;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,37 +11,29 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/compiler")
-@CrossOrigin(origins = "https://compiler-two-sigma.vercel.app")
+// UPDATED: Use * to allow all origins or put your exact Vercel URL
+@CrossOrigin(origins = "*") 
 public class CompilerController {
 
     @PostMapping("/run")
     public CodeResponse runCode(@RequestBody CodeRequest request) {
         String code = request.getCode();
-        String input = request.getInput();
+        // UPDATED: Your frontend sends 'stdin', ensure your CodeRequest model matches or check both
+        String input = request.getInput() != null ? request.getInput() : request.getStdin();
 
         if (code == null || code.isBlank()) {
             return new CodeResponse("Error: No code provided.", null, null, "Error");
         }
 
-        // Create temporary folder
-        Path folder;
+        Path folder = null;
         try {
             folder = Files.createTempDirectory("compiler_" + UUID.randomUUID());
-        } catch (IOException e) {
-            return new CodeResponse("Error creating temporary folder: " + e.getMessage(), null, null, "Error");
-        }
+            File javaFile = folder.resolve("Main.java").toFile();
+            try (FileWriter writer = new FileWriter(javaFile)) {
+                writer.write(code);
+            }
 
-        File javaFile = folder.resolve("Main.java").toFile();
-
-        try (FileWriter writer = new FileWriter(javaFile)) {
-            writer.write(code);
-        } catch (IOException e) {
-            deleteFolder(folder.toFile());
-            return new CodeResponse("Error writing code file: " + e.getMessage(), null, null, "Error");
-        }
-
-        try {
-            // Compile
+            // 1. COMPILE
             Process compile = new ProcessBuilder("javac", "Main.java")
                     .directory(folder.toFile())
                     .redirectErrorStream(true)
@@ -51,22 +42,20 @@ public class CompilerController {
             String compileOutput = readStream(compile.getInputStream());
             compile.waitFor();
 
-            if (!compileOutput.isEmpty()) {
-                deleteFolder(folder.toFile());
+            if (compile.exitValue() != 0) { // Check exit code instead of just output length
                 return new CodeResponse("Compilation Error:\n" + compileOutput, null, null, "Compilation Error");
             }
 
-            // Run with optional input, timeout 10s
+            // 2. RUN
             Process run = new ProcessBuilder("java", "-cp", ".", "Main")
                     .directory(folder.toFile())
                     .redirectErrorStream(true)
                     .start();
 
+            // Provide input to the running process
             if (input != null && !input.isBlank()) {
-                try (BufferedWriter writerInput = new BufferedWriter(
-                        new OutputStreamWriter(run.getOutputStream()))) {
+                try (BufferedWriter writerInput = new BufferedWriter(new OutputStreamWriter(run.getOutputStream()))) {
                     writerInput.write(input);
-                    writerInput.newLine();
                     writerInput.flush();
                 }
             }
@@ -74,30 +63,28 @@ public class CompilerController {
             boolean finished = run.waitFor(10, TimeUnit.SECONDS);
             if (!finished) {
                 run.destroyForcibly();
-                deleteFolder(folder.toFile());
-                return new CodeResponse("Error: Execution timed out (10 second limit exceeded).", null, null, "Timeout");
+                return new CodeResponse("Error: Execution timed out.", null, null, "Timeout");
             }
 
             String output = readStream(run.getInputStream());
-            deleteFolder(folder.toFile());
-
-            return new CodeResponse(output.isBlank() ? "No output" : output, null, null, "Success");
+            return new CodeResponse(output.isEmpty() ? "No output" : output, null, null, "Success");
 
         } catch (Exception e) {
-            deleteFolder(folder.toFile());
             return new CodeResponse("Error: " + e.getMessage(), null, null, "Error");
+        } finally {
+            if (folder != null) deleteFolder(folder.toFile());
         }
     }
 
     private String readStream(InputStream inputStream) throws IOException {
+        StringBuilder output = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-            StringBuilder output = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
                 output.append(line).append("\n");
             }
-            return output.toString();
         }
+        return output.toString().trim(); // Use trim to remove trailing newlines
     }
 
     private void deleteFolder(File folder) {
