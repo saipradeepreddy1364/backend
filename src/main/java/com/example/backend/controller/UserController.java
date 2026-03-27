@@ -4,6 +4,7 @@ import com.example.backend.model.User;
 import com.example.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +21,6 @@ public class UserController {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    // POST /api/auth/register
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(@RequestBody User user) {
         Map<String, Object> response = new HashMap<>();
@@ -42,7 +42,6 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    // POST /api/auth/login
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials) {
         Map<String, Object> response = new HashMap<>();
@@ -74,9 +73,8 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/auth/user/{id}
     @GetMapping("/user/{id}")
-    public ResponseEntity<Map<String, Object>> getUser(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getUser(@PathVariable @NonNull Long id) {
         Map<String, Object> response = new HashMap<>();
 
         Optional<User> userOpt = userRepository.findById(id);
