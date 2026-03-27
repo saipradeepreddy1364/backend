@@ -13,9 +13,13 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**")
-                        .allowedOrigins("https://compiler-two-sigma.vercel.app")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+
+                registry.addMapping("/**")  // ✅ allow ALL endpoints
+                        .allowedOrigins(
+                                "http://localhost:5173",   // ✅ local frontend
+                                "https://compiler-two-sigma.vercel.app"
+                        )
+                        .allowedMethods("*")
                         .allowedHeaders("*")
                         .allowCredentials(true);
             }
