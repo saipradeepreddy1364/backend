@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -13,10 +14,11 @@ import org.springframework.web.client.RestTemplate;
 
 @RestController
 @RequestMapping("/api/ai")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "https://compiler-mu-two.vercel.app")
 public class AIController {
 
-    private String anthropicApiKey = "your-real-api-key-here";
+    @Value("${ANTHROPIC_API_KEY}")
+    private String anthropicApiKey;
 
     @PostMapping("/chat")
     public ResponseEntity<String> chat(@RequestBody String body) {
