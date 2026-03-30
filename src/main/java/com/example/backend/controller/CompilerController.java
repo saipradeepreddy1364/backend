@@ -71,9 +71,14 @@ public class CompilerController {
             }
 
             String output = readStream(run.getInputStream());
-            
+
+            // Filter out JAVA_TOOL_OPTIONS line added by Render
+            String filteredOutput = output.lines()
+                    .filter(line -> !line.startsWith("Picked up JAVA_TOOL_OPTIONS"))
+                    .collect(java.util.stream.Collectors.joining("\n"));
+
             // Return 'No output' if the string is truly empty
-            return new CodeResponse(output.trim().isEmpty() ? "No output" : output, null, null, "Success");
+            return new CodeResponse(filteredOutput.trim().isEmpty() ? "No output" : filteredOutput, null, null, "Success");
 
         } catch (Exception e) {
             return new CodeResponse("Backend Error: " + e.getMessage(), null, null, "Error");
