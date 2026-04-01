@@ -46,3 +46,4 @@ public class AIController {
                 .body("{\"error\": \"" + e.getMessage() + "\"}");
         }
     }
+}
