@@ -22,9 +22,9 @@ public class SavedCodeController {
     public ResponseEntity<Map<String, Object>> saveCode(@RequestBody SavedCode savedCode) {
         Map<String, Object> response = new HashMap<>();
 
-        if (savedCode.getUserId() == null) {
+        if (savedCode.getUserEmail() == null || savedCode.getUserEmail().isBlank()) {
             response.put("success", false);
-            response.put("message", "userId is required. Please login first.");
+            response.put("message", "userEmail is required. Please login first.");
             return ResponseEntity.badRequest().body(response);
         }
 
@@ -36,9 +36,9 @@ public class SavedCodeController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<SavedCode>> getCodesByUser(@PathVariable @NonNull Long userId) {
-        List<SavedCode> codes = savedCodeRepository.findByUserIdOrderBySavedAtDesc(userId);
+    @GetMapping("/user/{userEmail}")
+    public ResponseEntity<List<SavedCode>> getCodesByUser(@PathVariable @NonNull String userEmail) {
+        List<SavedCode> codes = savedCodeRepository.findByUserEmailOrderBySavedAtDesc(userEmail);
         return ResponseEntity.ok(codes);
     }
 

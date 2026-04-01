@@ -19,7 +19,9 @@ public class SavedCode {
     @Column(columnDefinition = "TEXT")
     private String input;
 
-    private Long userId;
+    private String userEmail;
+
+    private String language;
 
     private LocalDateTime savedAt;
 
@@ -40,8 +42,11 @@ public class SavedCode {
     public String getInput() { return input; }
     public void setInput(String input) { this.input = input; }
 
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public String getUserEmail() { return userEmail; }
+    public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
+
+    public String getLanguage() { return language; }
+    public void setLanguage(String language) { this.language = language; }
 
     public LocalDateTime getSavedAt() { return savedAt; }
     public void setSavedAt(LocalDateTime savedAt) { this.savedAt = savedAt; }
