@@ -28,12 +28,10 @@ public class CompilerController {
 
         Path folder = null;
         try {
-            // Create temp folder
             folder = Files.createTempDirectory("compiler_" + UUID.randomUUID());
             Path javaFile = folder.resolve("Main.java");
             Files.writeString(javaFile, code);
 
-            // STEP 1: IN-MEMORY COMPILE using javax.tools (no new JVM process!)
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
             if (compiler == null) {
@@ -64,15 +62,20 @@ public class CompilerController {
                 }
             }
 
-            // STEP 2: RUN via ProcessBuilder (1 JVM startup instead of 2)
-            Process run = new ProcessBuilder("java", "-cp", folder.toString(), "Main")
+            Process run = new ProcessBuilder(
+                    "java",
+                    "-client",
+                    "-XX:TieredStopAtLevel=1",
+                    "-XX:+UseSerialGC",
+                    "-Xms16m",
+                    "-Xmx64m",
+                    "-cp", folder.toString(),
+                    "Main")
                     .redirectErrorStream(true)
                     .start();
 
-            // Read output concurrently (prevents pipe buffer deadlock)
             Future<String> outputFuture = executor.submit(() -> readStream(run.getInputStream()));
 
-            // Send stdin input
             if (input != null && !input.isBlank()) {
                 try (BufferedWriter inputWriter = new BufferedWriter(
                         new OutputStreamWriter(run.getOutputStream()))) {
@@ -81,7 +84,7 @@ public class CompilerController {
                     inputWriter.flush();
                 }
             } else {
-                run.getOutputStream().close(); // close stdin so Scanner doesn't hang
+                run.getOutputStream().close();
             }
 
             boolean finished = run.waitFor(10, TimeUnit.SECONDS);
@@ -109,10 +112,6 @@ public class CompilerController {
         }
     }
 
-    /**
-     * Fallback if javax.tools is unavailable (JRE-only environment).
-     * Uses ProcessBuilder with all deadlock fixes applied.
-     */
     private CodeResponse fallbackProcessCompiler(Path folder, String input) throws Exception {
         Process compile = new ProcessBuilder("javac", "Main.java")
                 .directory(folder.toFile())
@@ -130,7 +129,15 @@ public class CompilerController {
             return new CodeResponse("Compilation Error:\n" + compileOutput, null, null, "Compilation Error");
         }
 
-        Process run = new ProcessBuilder("java", "-cp", ".", "Main")
+        Process run = new ProcessBuilder(
+                "java",
+                "-client",
+                "-XX:TieredStopAtLevel=1",
+                "-XX:+UseSerialGC",
+                "-Xms16m",
+                "-Xmx64m",
+                "-cp", ".",
+                "Main")
                 .directory(folder.toFile())
                 .redirectErrorStream(true)
                 .start();
@@ -139,7 +146,9 @@ public class CompilerController {
 
         if (input != null && !input.isBlank()) {
             try (BufferedWriter w = new BufferedWriter(new OutputStreamWriter(run.getOutputStream()))) {
-                w.write(input); w.newLine(); w.flush();
+                w.write(input);
+                w.newLine();
+                w.flush();
             }
         } else {
             run.getOutputStream().close();
@@ -155,7 +164,9 @@ public class CompilerController {
         String filtered = output.lines()
                 .filter(l -> !l.startsWith("Picked up JAVA_TOOL_OPTIONS"))
                 .collect(java.util.stream.Collectors.joining("\n"));
-        return new CodeResponse(filtered.trim().isEmpty() ? "No output" : filtered.trim(), null, null, "Success");
+        return new CodeResponse(
+                filtered.trim().isEmpty() ? "No output" : filtered.trim(),
+                null, null, "Success");
     }
 
     private String readStream(InputStream inputStream) throws IOException {
@@ -172,7 +183,9 @@ public class CompilerController {
     private void deleteFolder(File folder) {
         if (folder.isDirectory()) {
             File[] files = folder.listFiles();
-            if (files != null) { for (File f : files) deleteFolder(f); }
+            if (files != null) {
+                for (File f : files) deleteFolder(f);
+            }
         }
         folder.delete();
     }
