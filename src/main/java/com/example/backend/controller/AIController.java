@@ -28,7 +28,7 @@ public class AIController {
             HttpEntity<String> entity = new HttpEntity<>(body, headers);
 
             // API key is passed as a query param for Gemini
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + geminiApiKey;
+           String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=" + geminiApiKey;
 
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
