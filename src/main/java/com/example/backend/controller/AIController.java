@@ -36,7 +36,7 @@ public class AIController {
             HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
 
             // ✅ FIXED MODEL
-            String url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey;
+            String url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.0-pro:generateContent?key=" + geminiApiKey;
 
             ResponseEntity<String> response =
                     restTemplate.postForEntity(url, entity, String.class);
