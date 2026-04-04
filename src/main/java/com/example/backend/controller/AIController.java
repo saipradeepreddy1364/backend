@@ -12,15 +12,15 @@ import org.springframework.web.client.RestTemplate;
 @CrossOrigin(origins = "*")
 public class AIController {
 
-    @Value("${ANTHROPIC_API_KEY}")
-    private String anthropicApiKey;
+    @Value("${GROQ_API_KEY}")
+    private String groqApiKey;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/chat")
     public ResponseEntity<String> chat(@RequestBody Object body) {
         try {
-            if (anthropicApiKey == null || anthropicApiKey.isEmpty()) {
+            if (groqApiKey == null || groqApiKey.isEmpty()) {
                 return ResponseEntity.status(500)
                     .body("{\"error\": \"API Key is missing.\"}");
             }
@@ -29,13 +29,12 @@ public class AIController {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("x-api-key", anthropicApiKey);
-            headers.set("anthropic-version", "2023-06-01");
+            headers.set("Authorization", "Bearer " + groqApiKey);
 
             String jsonBody = objectMapper.writeValueAsString(body);
             HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
 
-            String url = "https://api.anthropic.com/v1/messages";
+            String url = "https://api.groq.com/openai/v1/chat/completions";
 
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
