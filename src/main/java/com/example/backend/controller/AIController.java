@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -8,46 +9,44 @@ import org.springframework.web.client.RestTemplate;
 
 @RestController
 @RequestMapping("/api/ai")
-@CrossOrigin(origins = "*") // Allows your frontend to talk to your backend
+@CrossOrigin(origins = "*")
 public class AIController {
 
-    // This will automatically look for the environment variable named GEMINI_API_KEY 
-    // that you set in your Render dashboard settings.
-    @Value("${GEMINI_API_KEY}")
-    private String geminiApiKey;
+    @Value("${ANTHROPIC_API_KEY}")
+    private String anthropicApiKey;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/chat")
-    public ResponseEntity<String> chat(@RequestBody String jsonBody) {
+    public ResponseEntity<String> chat(@RequestBody Object body) {
         try {
-            // Check if API Key was loaded correctly
-            if (geminiApiKey == null || geminiApiKey.isEmpty()) {
-                return ResponseEntity.status(500).body("{\"error\": \"API Key is missing from Environment Variables.\"}");
+            if (anthropicApiKey == null || anthropicApiKey.isEmpty()) {
+                return ResponseEntity.status(500)
+                    .body("{\"error\": \"API Key is missing.\"}");
             }
 
             RestTemplate restTemplate = new RestTemplate();
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("x-api-key", anthropicApiKey);
+            headers.set("anthropic-version", "2023-06-01");
 
-            // Create the request entity using the JSON body from the frontend
+            String jsonBody = objectMapper.writeValueAsString(body);
             HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
 
-            // UPDATED URL: Using v1beta/models/gemini-1.5-flash
-            // This is the most compatible version for new keys and specific regions.
-            String url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=" + geminiApiKey;
+            String url = "https://api.anthropic.com/v1/messages";
 
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
             return ResponseEntity.ok(response.getBody());
 
         } catch (HttpClientErrorException e) {
-            // This catches Google API specific errors (403, 404, 400)
             return ResponseEntity.status(e.getStatusCode())
-                    .body("{\"error\": \"Google API Error: " + e.getResponseBodyAsString() + "\"}");
+                .body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            // This catches general Java/Backend errors
             return ResponseEntity.status(500)
-                    .body("{\"error\": \"Server Error: " + e.getMessage() + "\"}");
+                .body("{\"error\": \"" + e.getMessage() + "\"}");
         }
     }
 }
