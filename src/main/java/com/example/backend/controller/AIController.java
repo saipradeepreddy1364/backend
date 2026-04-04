@@ -28,8 +28,7 @@ public class AIController {
             HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
 
             // Using the 1.5-flash model as it is the current standard for performance
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey;
-
+String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + geminiApiKey;
             ResponseEntity<String> response =
                     restTemplate.postForEntity(url, entity, String.class);
 
