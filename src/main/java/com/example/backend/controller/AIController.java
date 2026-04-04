@@ -15,28 +15,20 @@ public class AIController {
     private String geminiApiKey;
 
     @PostMapping("/chat")
-    public ResponseEntity<String> chat(@RequestBody String prompt) {
+    public ResponseEntity<String> chat(@RequestBody String jsonBody) {
         try {
             RestTemplate restTemplate = new RestTemplate();
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // ✅ Gemini request body
-            String requestBody = "{\n" +
-                    "  \"contents\": [\n" +
-                    "    {\n" +
-                    "      \"parts\": [\n" +
-                    "        { \"text\": \"" + prompt.replace("\"", "\\\"") + "\" }\n" +
-                    "      ]\n" +
-                    "    }\n" +
-                    "  ]\n" +
-                    "}";
+            // Since the frontend (ai.ts) is already sending a perfectly formatted 
+            // Gemini JSON body (with contents, parts, roles, etc.), 
+            // we just pass that body directly to the Google API.
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
 
-            HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
-
-            // ✅ FIXED MODEL
-            String url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.0-pro:generateContent?key=" + geminiApiKey;
+            // Using the 1.5-flash model as it is the current standard for performance
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey;
 
             ResponseEntity<String> response =
                     restTemplate.postForEntity(url, entity, String.class);
