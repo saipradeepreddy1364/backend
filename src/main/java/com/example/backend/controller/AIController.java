@@ -34,7 +34,7 @@ public class AIController {
 
             // UPDATED URL: Using v1beta/models/gemini-1.5-flash
             // This is the most compatible version for new keys and specific regions.
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey;
+            String url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=" + geminiApiKey;
 
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
