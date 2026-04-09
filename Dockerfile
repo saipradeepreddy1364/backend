@@ -1,4 +1,4 @@
-FROM amazoncorretto:17-alpine
+﻿FROM amazoncorretto:17-alpine
 
 WORKDIR /app
 
@@ -19,10 +19,17 @@ COPY src src
 # build jar
 RUN ./mvnw clean package -DskipTests
 
-# Render uses dynamic port ? important
+# Render uses dynamic port
 ENV PORT=10000
 
 EXPOSE 10000
 
-# start spring boot
-CMD ["java","-Dserver.port=${PORT}","-jar","target/backend.jar"]
+# Use shell form so ${PORT} is properly expanded at runtime
+CMD ["sh", "-c", "java \
+  -XX:TieredStopAtLevel=1 \
+  -XX:+UseSerialGC \
+  -Xms64m \
+  -Xmx256m \
+  -Djava.security.egd=file:/dev/./urandom \
+  -Dserver.port=${PORT} \
+  -jar target/backend.jar"]
