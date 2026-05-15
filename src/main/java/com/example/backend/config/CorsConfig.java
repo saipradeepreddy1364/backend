@@ -13,6 +13,7 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.addAllowedOrigin("https://compiler-mu-two.vercel.app");
+        config.addAllowedOrigin("https://compile-java.vercel.app");
         config.addAllowedOrigin("https://backend-4k4j.onrender.com");
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
